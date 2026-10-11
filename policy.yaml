@@ -1,0 +1,33 @@
+# Per-agent policy. Built-in rules always apply first; roles layer on top.
+# Roles may tighten freely. They may only relax a plain "needs approval" to allow,
+# never a block, and never a prod/sensitive path.
+default_role: default
+
+# agent name (or glob) -> role. First match wins.
+agents:
+  reader-*: reader
+  deploy-bot: deployer
+
+roles:
+  default: {}
+
+  reader:
+    allowed_tools: [read_file, list_dir, search_files]
+
+  deployer:
+    rules:
+      - name: workspace-edits-preapproved
+        tools: [write_file, edit_file, create_file]
+        path_glob: "workspace/*"
+        verdict: allow
+        reason: Edits inside workspace/ are pre-approved for deployers.
+      - name: protect-migrations
+        tools: [delete_file, delete_dir, write_file, edit_file]
+        path_glob: "*/migrations/*"
+        verdict: block
+        reason: Migrations are immutable.
+      - name: no-package-installs
+        tools: [run_shell]
+        command_regex: '\b(pip|npm|apt(-get)?)\s+install\b'
+        verdict: block
+        reason: Package installs are not permitted.

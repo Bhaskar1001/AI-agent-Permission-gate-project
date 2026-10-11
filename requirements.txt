@@ -1,0 +1,8 @@
+pydantic>=2.0
+streamlit>=1.30
+pandas
+pyyaml
+fastapi>=0.110
+uvicorn
+httpx
+pytest
